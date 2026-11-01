@@ -586,14 +586,29 @@ export const COMFYUI_WORKFLOW_TEMPLATES: Record<
         inputs: {
           clip: ['5', 0],
           prompt: '',
-          auto_resize_images: true,
+          auto_resize_images: false,
           vae: ['6', 0],
-          image1: ['1', 0],
-          image2: ['2', 0],
-          image3: ['3', 0],
+          image1: ['14', 0],
+          image2: ['15', 0],
+          image3: ['16', 0],
         },
         class_type: 'TextEncodeZImageOmni',
         _meta: { title: 'Z-Image Omni 三图+提示词编码' },
+      },
+      '14': {
+        inputs: { image: ['1', 0], width: 1024, height: 1024, upscale_method: 'lanczos', keep_proportion: true, divisible_by: 16, crop: 'center' },
+        class_type: 'ImageResizeKJ',
+        _meta: { title: '人像参考对齐 (÷16)' },
+      },
+      '15': {
+        inputs: { image: ['2', 0], width: 1024, height: 1024, upscale_method: 'lanczos', keep_proportion: true, divisible_by: 16, crop: 'center' },
+        class_type: 'ImageResizeKJ',
+        _meta: { title: '服装参考对齐 (÷16)' },
+      },
+      '16': {
+        inputs: { image: ['3', 0], width: 1024, height: 1024, upscale_method: 'lanczos', keep_proportion: true, divisible_by: 16, crop: 'center' },
+        class_type: 'ImageResizeKJ',
+        _meta: { title: '姿势参考对齐 (÷16)' },
       },
       '8': {
         inputs: { model: ['4', 0], shift: 3.0 },
@@ -681,13 +696,23 @@ export const COMFYUI_WORKFLOW_TEMPLATES: Record<
         inputs: {
           clip: ['5', 0],
           prompt: '',
-          auto_resize_images: true,
+          auto_resize_images: false,
           vae: ['6', 0],
-          image1: ['1', 0],
-          image2: ['2', 0],
+          image1: ['14', 0],
+          image2: ['15', 0],
         },
         class_type: 'TextEncodeZImageOmni',
         _meta: { title: 'Z-Image Omni 双图+提示词编码' },
+      },
+      '14': {
+        inputs: { image: ['1', 0], width: 1024, height: 1024, upscale_method: 'lanczos', keep_proportion: true, divisible_by: 16, crop: 'center' },
+        class_type: 'ImageResizeKJ',
+        _meta: { title: '姿势参考对齐 (÷16)' },
+      },
+      '15': {
+        inputs: { image: ['2', 0], width: 1024, height: 1024, upscale_method: 'lanczos', keep_proportion: true, divisible_by: 16, crop: 'center' },
+        class_type: 'ImageResizeKJ',
+        _meta: { title: '人物参考对齐 (÷16)' },
       },
       '8': {
         inputs: { model: ['4', 0], shift: 3.0 },
@@ -968,7 +993,8 @@ async function uploadImageToComfy(
   baseUrl: string,
   src: string,
   filenamePrefix: string,
-  apiKey: string
+  apiKey: string,
+  useProxy = false
 ): Promise<string> {
   const dataUrl = await srcToPngDataUrl(src)
   const blob = dataUrlToBlob(dataUrl)
@@ -979,13 +1005,15 @@ async function uploadImageToComfy(
   const headers: Record<string, string> = {}
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`
 
-  const res = await fetch(`${baseUrl}/upload/image`, {
+  // FormData 直接透传给 smartFetch：无代理时浏览器自动带 boundary；走代理时由
+  // useProxy 分支把 FormData 交给 fetch（同源 /api/proxy 由 vite 收到后再原样转发）
+  const res = await smartFetch(`${baseUrl}/upload/image`, {
     method: 'POST',
     headers,
     body: form,
-  })
+  }, useProxy)
   if (!res.ok) {
-    throw new Error(`上传参考图到 ComfyUI 失败 (HTTP ${res.status})，请确认已开启 --enable-cors-header *`)
+    throw new Error(`上传参考图到 ComfyUI 失败 (HTTP ${res.status})`)
   }
   const json = await res.json()
   return json.subfolder ? `${json.subfolder}/${json.name}` : json.name
@@ -1029,14 +1057,14 @@ async function generateWithComfyUi(params: {
 
   for (const slot of slotUploads) {
     if (slot.nodeId && slot.nodeId !== 'none' && slot.src && workflow[slot.nodeId]?.inputs) {
-      const uploadedName = await uploadImageToComfy(baseUrl, slot.src, slot.prefix, apiKey)
+      const uploadedName = await uploadImageToComfy(baseUrl, slot.src, slot.prefix, apiKey, config.useProxy)
       workflow[slot.nodeId].inputs.image = uploadedName
     }
   }
 
   if (cp.stitchedNodeId && cp.stitchedNodeId !== 'none' && workflow[cp.stitchedNodeId]?.inputs) {
     const stitchedDataUrl = await stitchRecipeCanvas(recipe)
-    const uploadedName = await uploadImageToComfy(baseUrl, stitchedDataUrl, 'studio_stitched', apiKey)
+    const uploadedName = await uploadImageToComfy(baseUrl, stitchedDataUrl, 'studio_stitched', apiKey, config.useProxy)
     workflow[cp.stitchedNodeId].inputs.image = uploadedName
   }
 
