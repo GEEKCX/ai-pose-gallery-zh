@@ -422,7 +422,7 @@ function extractUniversalImage(json: any): string | null {
 // ============================================================================
 
 export const COMFYUI_WORKFLOW_TEMPLATES: Record<
-  'qwen21_3img' | 'qwen21_2img',
+  'qwen21_3img' | 'qwen21_2img' | 'zimage_turbo_3img' | 'zimage_turbo_2img',
   {
     label: string
     workflow: Record<string, any>
@@ -533,6 +533,200 @@ export const COMFYUI_WORKFLOW_TEMPLATES: Record<
       },
       '12': {
         inputs: { filename_prefix: 'pose_studio/result', images: ['11', 0] },
+        class_type: 'SaveImage',
+        _meta: { title: '保存生成结果' },
+      },
+    },
+  },
+  zimage_turbo_3img: {
+    label: 'Z-Image Turbo 三图合成（人像+服装+姿势）',
+    defaults: {
+      promptNodeId: '9',
+      portraitNodeId: '1',
+      costumeNodeId: '2',
+      poseNodeId: '3',
+      stitchedNodeId: 'none',
+    },
+    workflow: {
+      '1': {
+        inputs: { image: 'portrait_ref.png' },
+        class_type: 'LoadImage',
+        _meta: { title: '图1：人像参考 (Portrait)' },
+      },
+      '2': {
+        inputs: { image: 'costume_ref.png' },
+        class_type: 'LoadImage',
+        _meta: { title: '图2：服装参考 (Costume)' },
+      },
+      '3': {
+        inputs: { image: 'pose_ref.png' },
+        class_type: 'LoadImage',
+        _meta: { title: '图3：姿势参考 (Pose)' },
+      },
+      '4': {
+        inputs: { unet_name: 'z-image-turbo-q5_k_m.gguf' },
+        class_type: 'UnetLoaderGGUF',
+        _meta: { title: '加载 Z-Image Turbo 底模 (GGUF)' },
+      },
+      '5': {
+        inputs: {
+          clip_name: 'qwen_3_4b.safetensors',
+          type: 'lumina2',
+          device: 'default',
+        },
+        class_type: 'CLIPLoader',
+        _meta: { title: '加载 Qwen3-4B 文本编码器 (Z-Image)' },
+      },
+      '6': {
+        inputs: { vae_name: 'ae.safetensors' },
+        class_type: 'VAELoader',
+        _meta: { title: '加载 Z-Image VAE (ae.safetensors)' },
+      },
+      '7': {
+        inputs: {
+          clip: ['5', 0],
+          prompt: '',
+          auto_resize_images: true,
+          vae: ['6', 0],
+          image1: ['1', 0],
+          image2: ['2', 0],
+          image3: ['3', 0],
+        },
+        class_type: 'TextEncodeZImageOmni',
+        _meta: { title: 'Z-Image Omni 三图+提示词编码' },
+      },
+      '8': {
+        inputs: { model: ['4', 0], shift: 3.0 },
+        class_type: 'ModelSamplingAuraFlow',
+        _meta: { title: 'Z-Image 采样偏移 (shift=3.0)' },
+      },
+      '9': {
+        inputs: {
+          seed: 20261101,
+          steps: 8,
+          cfg: 1.0,
+          sampler_name: 'euler',
+          scheduler: 'simple',
+          denoise: 1.0,
+          model: ['8', 0],
+          positive: ['7', 0],
+          negative: ['10', 0],
+          latent_image: ['11', 0],
+        },
+        class_type: 'KSampler',
+        _meta: { title: 'KSampler (Turbo: 8步 cfg1)' },
+      },
+      '10': {
+        inputs: { conditioning: ['7', 0] },
+        class_type: 'ConditioningZeroOut',
+        _meta: { title: '负向条件置零 (Turbo 标准做法)' },
+      },
+      '11': {
+        inputs: { width: 1024, height: 1024, batch_size: 1 },
+        class_type: 'EmptySD3LatentImage',
+        _meta: { title: '空白 Latent (1024x1024)' },
+      },
+      '12': {
+        inputs: { samples: ['9', 0], vae: ['6', 0] },
+        class_type: 'VAEDecode',
+        _meta: { title: 'VAE 解码' },
+      },
+      '13': {
+        inputs: { filename_prefix: 'pose_studio/zimage_result', images: ['12', 0] },
+        class_type: 'SaveImage',
+        _meta: { title: '保存生成结果' },
+      },
+    },
+  },
+  zimage_turbo_2img: {
+    label: 'Z-Image Turbo 双图姿态迁移（姿势+人物/拼图）',
+    defaults: {
+      promptNodeId: '9',
+      portraitNodeId: '2',
+      costumeNodeId: 'none',
+      poseNodeId: '1',
+      stitchedNodeId: 'none',
+    },
+    workflow: {
+      '1': {
+        inputs: { image: 'pose_reference.png' },
+        class_type: 'LoadImage',
+        _meta: { title: '图1：姿势参考图 (LoadImage)' },
+      },
+      '2': {
+        inputs: { image: 'person_reference.png' },
+        class_type: 'LoadImage',
+        _meta: { title: '图2：人物/服装参考图 (LoadImage)' },
+      },
+      '4': {
+        inputs: { unet_name: 'z-image-turbo-q5_k_m.gguf' },
+        class_type: 'UnetLoaderGGUF',
+        _meta: { title: '加载 Z-Image Turbo 底模 (GGUF)' },
+      },
+      '5': {
+        inputs: {
+          clip_name: 'qwen_3_4b.safetensors',
+          type: 'lumina2',
+          device: 'default',
+        },
+        class_type: 'CLIPLoader',
+        _meta: { title: '加载 Qwen3-4B 文本编码器 (Z-Image)' },
+      },
+      '6': {
+        inputs: { vae_name: 'ae.safetensors' },
+        class_type: 'VAELoader',
+        _meta: { title: '加载 Z-Image VAE (ae.safetensors)' },
+      },
+      '7': {
+        inputs: {
+          clip: ['5', 0],
+          prompt: '',
+          auto_resize_images: true,
+          vae: ['6', 0],
+          image1: ['1', 0],
+          image2: ['2', 0],
+        },
+        class_type: 'TextEncodeZImageOmni',
+        _meta: { title: 'Z-Image Omni 双图+提示词编码' },
+      },
+      '8': {
+        inputs: { model: ['4', 0], shift: 3.0 },
+        class_type: 'ModelSamplingAuraFlow',
+        _meta: { title: 'Z-Image 采样偏移 (shift=3.0)' },
+      },
+      '9': {
+        inputs: {
+          seed: 20261101,
+          steps: 8,
+          cfg: 1.0,
+          sampler_name: 'euler',
+          scheduler: 'simple',
+          denoise: 1.0,
+          model: ['8', 0],
+          positive: ['7', 0],
+          negative: ['10', 0],
+          latent_image: ['11', 0],
+        },
+        class_type: 'KSampler',
+        _meta: { title: 'KSampler (Turbo: 8步 cfg1)' },
+      },
+      '10': {
+        inputs: { conditioning: ['7', 0] },
+        class_type: 'ConditioningZeroOut',
+        _meta: { title: '负向条件置零 (Turbo 标准做法)' },
+      },
+      '11': {
+        inputs: { width: 1024, height: 1024, batch_size: 1 },
+        class_type: 'EmptySD3LatentImage',
+        _meta: { title: '空白 Latent (1024x1024)' },
+      },
+      '12': {
+        inputs: { samples: ['9', 0], vae: ['6', 0] },
+        class_type: 'VAEDecode',
+        _meta: { title: 'VAE 解码' },
+      },
+      '13': {
+        inputs: { filename_prefix: 'pose_studio/zimage_result', images: ['12', 0] },
         class_type: 'SaveImage',
         _meta: { title: '保存生成结果' },
       },

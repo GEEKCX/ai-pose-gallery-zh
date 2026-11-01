@@ -74,7 +74,7 @@ export interface ProviderEndpointConfig {
 export type ImagePassMode = 'url' | 'base64'
 
 export interface ComfyUiParams {
-  workflowPreset: 'qwen21_3img' | 'qwen21_2img' | 'custom'
+  workflowPreset: 'qwen21_3img' | 'qwen21_2img' | 'zimage_turbo_3img' | 'zimage_turbo_2img' | 'custom'
   workflowJson: string
   promptNodeId: string
   portraitNodeId: string

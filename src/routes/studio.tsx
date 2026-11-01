@@ -572,6 +572,12 @@ function StudioPage() {
                       <SelectItem value="qwen21_2img" className="text-xs">
                         {COMFYUI_WORKFLOW_TEMPLATES.qwen21_2img.label}
                       </SelectItem>
+                      <SelectItem value="zimage_turbo_3img" className="text-xs">
+                        {COMFYUI_WORKFLOW_TEMPLATES.zimage_turbo_3img.label}
+                      </SelectItem>
+                      <SelectItem value="zimage_turbo_2img" className="text-xs">
+                        {COMFYUI_WORKFLOW_TEMPLATES.zimage_turbo_2img.label}
+                      </SelectItem>
                       <SelectItem value="custom" className="text-xs">
                         自定义工作流 (已导入 JSON)
                       </SelectItem>
