@@ -1068,11 +1068,11 @@ async function generateWithComfyUi(params: {
   const clientId = `pose_studio_${Math.random().toString(36).slice(2, 10)}`
   let promptRes: Response
   try {
-    promptRes = await fetch(`${baseUrl}/prompt`, {
+    promptRes = await smartFetch(`${baseUrl}/prompt`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ prompt: workflow, client_id: clientId }),
-    })
+    }, config.useProxy)
   } catch {
     throw new Error(
       `无法连接本地 ComfyUI (${baseUrl})。请确认 ComfyUI 已启动，且启动参数包含 --enable-cors-header *`
@@ -1095,7 +1095,7 @@ async function generateWithComfyUi(params: {
 
   for (let attempt = 0; attempt < 250; attempt++) {
     await new Promise((r) => setTimeout(r, 1200))
-    const histRes = await fetch(`${baseUrl}/history/${promptId}`, { headers: authHeaders })
+    const histRes = await smartFetch(`${baseUrl}/history/${promptId}`, { headers: authHeaders }, config.useProxy)
     if (!histRes.ok) continue
     const histJson = await histRes.json()
     const item = histJson?.[promptId]
