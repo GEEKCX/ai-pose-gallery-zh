@@ -1123,7 +1123,7 @@ async function generateWithComfyUi(params: {
 
   for (let attempt = 0; attempt < 250; attempt++) {
     await new Promise((r) => setTimeout(r, 1200))
-    const histRes = await smartFetch(`${baseUrl}/history/${promptId}`, { headers: authHeaders }, config.useProxy)
+    const histRes = await smartFetch(`${baseUrl}/history/${promptId}`, { method: 'GET', headers: authHeaders }, config.useProxy)
     if (!histRes.ok) continue
     const histJson = await histRes.json()
     const item = histJson?.[promptId]
