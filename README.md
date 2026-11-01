@@ -22,11 +22,6 @@
 **中文版维护：** Anhao · [X @anhao_ai](https://x.com/anhao_ai)
 **GitHub：** <https://github.com/anhao/ai-pose-gallery-zh>
 
-> ⚠️ **免责声明（必读）**：
-> 1. **学习与创作限定**：本项目及配套插件/工作流**仅供个人学习、人体动态研究、合法艺术创作与技术交流使用**，严禁用于任何违反法律法规、生成违法违规/淫秽色情内容或侵害他人合法权益（如未经授权的真人肖像换脸）的用途。
-> 2. **NSFW 敏感内容提示**：图库包含部分 18+ 成人向人体素体姿势与内衣/性感穿搭参考，系统默认开启「安全模式 (SFW)」隐藏，**未成年人严禁解锁或访问**。
-> 3. **来源与版权声明**：全部姿势、服装、人像参考图均源自原作者 **ギア（@giaaibusi）** 公开站点，版权归原作者所有；本仓库仅为中文翻译整理与工程学习存档，禁止将图库图片打包倒卖。使用者因违规使用产生的一切法律责任由使用者本人独立承担。
-
 ---
 
 ## 这是什么
@@ -62,10 +57,6 @@
   - **字节火山方舟 Doubao**：`doubao-seedream-5-0`、`doubao-seedream-4-5-251128`、`doubao-seedream-4-0-250828`、`doubao-seededit-3-0-i2i-250628`（支持多图融合 `image: [...]`、2K/4K 分辨率）
   - **本地 ComfyUI 工作流引擎**：支持自动将三合一拼图及单张人像/服装/姿势图上传至本地 ComfyUI（`/upload/image`），注入自定义 API 工作流占位符或自动识别节点提交 `/prompt` 队列并轮询取回成品图；支持导入/导出通用 `.api.json` 工作流模板。
 - **跨页面后台生图 & IndexedDB 历史记录**：切换页面不会中断正在进行的生图请求；生成结果自动存入浏览器 IndexedDB（避免 `localStorage` 容量限制），支持复用提示词与原图下载。
-
-> 本地 ComfyUI 三图合成（Qwen Image Edit 2509）的模型清单、工作流说明和本地运行方法见 [docs/comfyui-local.md](docs/comfyui-local.md)。
-
-> 导入 API 后的动态高级参数、设定集参考上传与可选显示声明见 [ComfyUI 工作流高级参数](docs/comfyui-workflow-parameters.md)。
 
 ### 3. ComfyUI 原生自定义节点插件（`comfyui_plugin/`）
 将本仓库克隆到 `ComfyUI/custom_nodes/ai-pose-gallery-zh` 后，ComfyUI 画布右键菜单 **「AI角色三合一参考图集」** 下自动提供 4 个节点：
@@ -154,7 +145,7 @@ git clone --depth 1 https://github.com/anhao/ai-pose-gallery-zh.git
 │   ├── apply_translation.py# 生成三库 *-zh.json 纯中文数据与检索索引
 │   ├── verify.py           # 校验本地图片完整性（存在性 / 大小 / 文件头）
 │   └── build.sh            # 构建 Cloudflare 发布目录 dist/
-├── skills/                 # Claude Code / Agent 姿势・服装・人像检索技能包
+├── skills/                 # Claude Code / Agent 姿势检索技能包
 └── README.md
 ```
 
@@ -228,7 +219,7 @@ npx wrangler deploy
 
 ## Agent 技能（Skills）
 
-`skills/` 下提供 8 个 `SKILL.md` 格式的 Agent 技能，让 AI Agent 直接检索本仓库三大图库，作为生图 / 生视频的姿势、服装、人像参考。每个技能的 `references/catalog.csv` 用**相对路径**（`../../img/…`）指向本仓库 `img/`，不重复存图：
+`skills/` 下提供 5 个 `SKILL.md` 格式的 Agent 技能，让 AI Agent 按姿势名 + 视角检索本仓库的白模图，作为生图 / 生视频的姿势参考：
 
 | 技能 | 图片数 | 范围 |
 | --- | ---: | --- |
@@ -237,31 +228,17 @@ npx wrangler deploy
 | `pose-reference-sexy` | 399 | 全身单人・性感系（18+） |
 | `pose-reference-couple` | 275 | 双人缠绵（18+） |
 | `pose-reference-all` | 1,439 | 全部姿势 |
-| `costume-reference` | 1,068 | 服装：春夏秋冬・派对礼服・泳装度假（按单品 / 颜色 / 英文关键词检索） |
-| `costume-reference-sexy` | 339 | 服装：内衣睡衣・性感穿搭（18+） |
-| `portrait-reference` | 1,499 | 人像：正脸参考・造型氛围，按发长 / 51 种发型检索 |
 
 ```bash
 git clone --depth 1 https://github.com/anhao/ai-pose-gallery-zh.git ~/ai-pose-gallery-zh
 mkdir -p ~/.claude/skills
-for d in ~/ai-pose-gallery-zh/skills/*-reference*; do ln -s "$d" ~/.claude/skills/; done
+for d in ~/ai-pose-gallery-zh/skills/pose-reference-*; do ln -s "$d" ~/.claude/skills/; done
 ```
-
-技能靠相对路径读取 `img/`，请**软链**而不是复制，并保留整个仓库。三个技能可组合使用：人像定脸和发型 + 服装定穿搭 + 姿势定动作。
 
 ---
 
-## 免责声明与版权说明（Disclaimer）
+## 内容提示与版权致谢
 
-1. **合法合规与学习用途声明（严禁违法）**
-   - 本项目（含前端工作台、ComfyUI 插件、工作流模板及 Agent 技能）**仅供个人学习、人体结构研究、绘画动作参考与技术交流使用**。
-   - **严禁将本项目用于任何违法违规用途**，包括但不限于生成制作传播淫秽色情物品、暴力恐怖内容、虚假违法信息，或未经他人明确授权使用真实人物照片进行换脸/深伪合成（Deepfake）等侵犯他人肖像权、隐私权与名誉权的行为。
-   - 本工作台为纯前端/本地工具，所有 AI 生图请求均由使用者自行配置的云端 API 或使用者本机 ComfyUI 环境执行，平台不收集、不存储任何用户上传的图片或生成结果。**使用者对其上传素材及生成内容承担全部法律责任，本仓库作者及贡献者不对使用者的任何不当或违法行为承担责任。**
-2. **NSFW（18+）敏感内容声明**
-   - 图库中包含部分成人向 3D 素体姿势（全身单人・性感系、双人缠绵）及性感/内衣穿搭参考，旨在服务插画师与创作者的人体动态与光影练习。
-   - 站点与插件默认开启 **「安全模式 (SFW)」** 屏蔽上述分类；**未满 18 周岁的未成年人严禁关闭安全模式或访问相关内容**。
-3. **数据来源与版权归属声明**
-   - 本仓库中的全部姿势（`ai-pose-gallery.pages.dev`）、服装（`ai-costume-gallery.pages.dev`）、人像（`ai-portrait-gallery.pages.dev`，CC0 1.0 协议）图片与原始数据的著作权归原作者 **ギア（@giaaibusi）** 所有。
-   - 本仓库仅为中文本地化翻译与前端工程实践存档，不对原始图片主张任何权利，**严禁任何人将本仓库图片提取后进行商业倒卖或付费分发**。若原作者对镜像存档有任何异议，请联系维护者立即处理。
-4. **开源协议**
-   - 前端应用代码（`src/`）、ComfyUI 插件（`comfyui_plugin/`）与数据处理脚本（`scripts/`）以 [MIT 协议](LICENSE) 开源；该协议**不覆盖** `img/`、`thumbs/` 与 `data/` 中的图片及原始数据。
+- **内容提示**：图库包含部分成人向姿势与性感服装参考，仅供艺术创作、动作设计参考与前端技术学习使用，未成年人请勿访问。
+- **版权归属**：所有姿势、服装、人像图片与原始数据的著作权归原作者 **ギア（@giaaibusi）** 所有。本仓库仅为汉化学习与前端工程实践存档，不对图片主张任何权利。
+- **开源协议**：前端应用代码（`src/`）、ComfyUI 插件（`comfyui_plugin/`）与数据处理脚本（`scripts/`）以 [MIT 协议](LICENSE) 开源；该协议**不覆盖** `img/`、`thumbs/` 与 `data/` 中的图片及原始数据。

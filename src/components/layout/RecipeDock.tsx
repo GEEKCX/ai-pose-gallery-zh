@@ -3,8 +3,6 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { CopyIcon, DicesIcon, LoaderCircleIcon, PersonStandingIcon, ShirtIcon, SparklesIcon, Trash2Icon, UserRoundIcon, XIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { costumesQuery, portraitsQuery, posesQuery } from '@/api/gallery'
-import { referenceImageUrl } from '@/lib/recipeImages'
-import { workflowIdentity } from '@/lib/comfyWorkflowParameters'
 import { Button } from '@/components/ui/button'
 import { buildRecipePrompt } from '@/services/aiGenerator'
 import { useStudio } from '@/store/studioStore'
@@ -14,8 +12,7 @@ export function RecipeDock() {
   const { recipe, apiConfig, isGenerating, setPortrait, setCostume, setPose, clearRecipe, randomizeRecipe } = useStudio()
   const qc = useQueryClient()
   const extraCount = (recipe.extraImages || []).length
-  const workflowImages = apiConfig.activeProvider === 'comfyui' && recipe.workflowImagesIdentity === workflowIdentity(apiConfig.comfyuiParams.workflowJson) ? Object.values(recipe.workflowImages || {}) : []
-  const count = [recipe.portrait, recipe.costume, recipe.pose].filter(Boolean).length + extraCount + workflowImages.length
+  const count = [recipe.portrait, recipe.costume, recipe.pose].filter(Boolean).length + extraCount
 
   // 在合成台、设置页、指南页隐藏底部悬浮栏，避免与页面内组件重复
   if (pathname.startsWith('/studio') || pathname.startsWith('/settings') || pathname.startsWith('/guide')) {
@@ -36,7 +33,7 @@ export function RecipeDock() {
   }
 
   const handleCopyPrompt = async () => {
-    const text = buildRecipePrompt(recipe, apiConfig.stylePreset, workflowImages)
+    const text = buildRecipePrompt(recipe, apiConfig.stylePreset)
     await navigator.clipboard.writeText(text)
     toast.success('已复制提示词')
   }
@@ -50,7 +47,7 @@ export function RecipeDock() {
             {recipe.portrait ? (
               <>
                 <img
-                  src={referenceImageUrl(recipe.portrait.缩略图)}
+                  src={`/${recipe.portrait.缩略图}`}
                   alt={recipe.portrait.标题}
                   className="h-8 w-7 shrink-0 rounded-md object-cover sm:h-10 sm:w-8"
                 />
@@ -80,7 +77,7 @@ export function RecipeDock() {
             {recipe.costume ? (
               <>
                 <img
-                  src={referenceImageUrl(recipe.costume.缩略图)}
+                  src={`/${recipe.costume.缩略图}`}
                   alt={recipe.costume.服装名称}
                   className="h-8 w-7 shrink-0 rounded-md object-cover sm:h-10 sm:w-8"
                 />
@@ -110,7 +107,7 @@ export function RecipeDock() {
             {recipe.pose ? (
               <>
                 <img
-                  src={referenceImageUrl(recipe.pose.缩略图)}
+                  src={`/${recipe.pose.缩略图}`}
                   alt={recipe.pose.姿势名称}
                   className="h-8 w-7 shrink-0 rounded-md object-cover sm:h-10 sm:w-8"
                 />
